@@ -3,13 +3,13 @@ from typing import Dict
 
 from PyQt5.QtCore import Qt
 from epics import camonitor, camonitor_clear
-import lcls_tools.common.frontend.plotting.util as pydmPlotUtil
-from lcls_tools.superconducting.sc_linac_utils import ALL_CRYOMODULES
-from lcls_tools.superconducting.scLinac import Cryomodule
 from pydm import Display
 from qtpy.QtCore import Signal, Slot
 
-from quench_linac import QUENCH_CRYOMODULES, QuenchCavity
+import lcls_tools.common.frontend.plotting.util as pydmPlotUtil
+from lcls_tools.superconducting.sc_linac import Cryomodule
+from lcls_tools.superconducting.sc_linac_utils import ALL_CRYOMODULES
+from quench_linac import QUENCH_MACHINE, QuenchCavity
 
 
 class QuenchGUI(Display):
@@ -71,7 +71,7 @@ class QuenchGUI(Display):
 
         self.clear_all_connections()
 
-        self.current_cm: Cryomodule = QUENCH_CRYOMODULES[
+        self.current_cm: Cryomodule = QUENCH_MACHINE.cryomodules[
             self.ui.cm_combobox.currentText()
         ]
         self.current_cav: QuenchCavity = self.current_cm.cavities[
@@ -85,7 +85,7 @@ class QuenchGUI(Display):
         self.ui.combobox_rfmode.channel = self.current_cav.rf_control_pv
         self.ui.label_rfmode_rdbk.channel = self.current_cav.rf_mode_pv
         self.ui.button_rf_on.clicked.connect(self.current_cav.turn_on)
-        self.ui.button_rf_off.clicked.connect(self.current_cav.turnOff)
+        self.ui.button_rf_off.clicked.connect(self.current_cav.turn_off)
         self.ui.label_rfstatus_rdbk.channel = self.current_cav.rf_state_pv
         self.ui.ades_spinbox.channel = self.current_cav.ades_pv
         self.ui.ades_readback_label.channel = self.current_cav.aact_pv
@@ -115,7 +115,10 @@ class QuenchGUI(Display):
         self.waveform_updater.updatePlot(
             "FAULT_WAVEFORMS",
             [
-                (self.current_cav.fault_time_waveform_pv, self.current_cav.decay_ref_pv),
+                (
+                    self.current_cav.fault_time_waveform_pv,
+                    self.current_cav.decay_ref_pv,
+                ),
                 (
                     self.current_cav.fault_time_waveform_pv,
                     self.current_cav.fault_waveform_pv,
